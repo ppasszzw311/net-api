@@ -10,6 +10,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// 註冊LineBot
+builder.Services.AddHttpClient("LineBot", client => {
+    client.BaseAddress = new Uri("https://api.line.me/v2/bot/message/reply");
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["LineBot:ChannelAccessToken"]}");
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
