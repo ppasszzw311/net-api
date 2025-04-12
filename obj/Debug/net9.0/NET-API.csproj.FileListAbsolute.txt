@@ -35,3 +35,5 @@
 /Users/chenqingyu/Project/dotnet-proj/net-api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/chenqingyu/Project/dotnet-proj/net-api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /Users/chenqingyu/Project/dotnet-proj/net-api/obj/Debug/net9.0/NET-API.sourcelink.json
+/Users/chenqingyu/Project/dotnet-proj/net-api/bin/Debug/net9.0/DotNetEnv.dll
+/Users/chenqingyu/Project/dotnet-proj/net-api/bin/Debug/net9.0/Sprache.dll

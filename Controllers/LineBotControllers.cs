@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NET_API.Dtos;
 using System.Text.Json;
+using NET_API.Config;
 
 namespace NET_API.Controllers;
 
@@ -9,15 +10,12 @@ namespace NET_API.Controllers;
 public class LineBotController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    // 建立channel secret與channel access token
-    private readonly string _channelAccessToken; 
-    private readonly string _channelSecret;
+    private readonly LineBotConfig _lineBotConfig;
 
-    public LineBotController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public LineBotController(IHttpClientFactory httpClientFactory, LineBotConfig lineBotConfig)
     {
         _httpClientFactory = httpClientFactory;
-        _channelAccessToken = configuration["LineBot:ChannelAccessToken"] ?? throw new ArgumentNullException(nameof(_channelAccessToken));
-        _channelSecret = configuration["LineBot:ChannelSecret"] ?? throw new ArgumentNullException(nameof(_channelSecret));
+        _lineBotConfig = lineBotConfig;
     }
 
     [HttpPost]
@@ -38,6 +36,9 @@ public class LineBotController : ControllerBase
                 result.replyToken = replyToken;
                 result.messages = messages;
             });
+            Console.WriteLine(result);
+            Console.WriteLine(_lineBotConfig.ChannelAccessToken);
+            Console.WriteLine(_lineBotConfig.ChannelSecret);
             // 呼叫reply api
             var client = _httpClientFactory.CreateClient("LineBot");
             var response = await client.PostAsJsonAsync("", result);
