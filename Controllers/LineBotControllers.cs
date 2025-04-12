@@ -34,7 +34,7 @@ public class LineBotController : ControllerBase
                     result.replyToken = replyToken;
                     result.messages = messages;
                 });
-                
+                System.Console.WriteLine(result);
             }
             return Ok(result);
         }
