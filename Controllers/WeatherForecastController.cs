@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NET_API.Data;
+using NET_API.Models;
 
 namespace NET_API.Controllers;
 
@@ -6,42 +9,92 @@ namespace NET_API.Controllers;
 [Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+    private readonly ApplicationDbContext _context;
 
-    [HttpGet]
-    public IEnumerable<WeatherForecast> Get()
+    public WeatherForecastController(ApplicationDbContext context)
     {
-        return Enumerable.Range(1, 5).Select(index =>
-            new WeatherForecast
-            (
-                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                Random.Shared.Next(-20, 55),
-                Summaries[Random.Shared.Next(Summaries.Length)]
-            ))
-            .ToArray();
+        _context = context;
     }
 
-    [HttpGet("{id}")]
-    public ActionResult<WeatherForecast> GetById(int id)
+    // GET: api/WeatherForecast
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<WeatherForecast>>> GetWeatherForecasts()
     {
-        if (id < 1 || id > 5)
+        return await _context.WeatherForecasts.ToListAsync();
+    }
+
+    // GET: api/WeatherForecast/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<WeatherForecast>> GetWeatherForecast(int id)
+    {
+        var weatherForecast = await _context.WeatherForecasts.FindAsync(id);
+
+        if (weatherForecast == null)
         {
             return NotFound();
         }
 
-        return new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(id)),
-            Random.Shared.Next(-20, 55),
-            Summaries[Random.Shared.Next(Summaries.Length)]
-        );
+        return weatherForecast;
+    }
+
+    // POST: api/WeatherForecast
+    [HttpPost]
+    public async Task<ActionResult<WeatherForecast>> PostWeatherForecast(WeatherForecast weatherForecast)
+    {
+        _context.WeatherForecasts.Add(weatherForecast);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetWeatherForecast), new { id = weatherForecast.Id }, weatherForecast);
+    }
+
+    // PUT: api/WeatherForecast/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutWeatherForecast(int id, WeatherForecast weatherForecast)
+    {
+        if (id != weatherForecast.Id)
+        {
+            return BadRequest();
+        }
+
+        _context.Entry(weatherForecast).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!WeatherForecastExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/WeatherForecast/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteWeatherForecast(int id)
+    {
+        var weatherForecast = await _context.WeatherForecasts.FindAsync(id);
+        if (weatherForecast == null)
+        {
+            return NotFound();
+        }
+
+        _context.WeatherForecasts.Remove(weatherForecast);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool WeatherForecastExists(int id)
+    {
+        return _context.WeatherForecasts.Any(e => e.Id == id);
     }
 }
-
-public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-} 

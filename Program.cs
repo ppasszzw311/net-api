@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using DotNetEnv;
 using NET_API.Config;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using NET_API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,12 +39,25 @@ builder.Services.AddSwaggerGen();
 
 // 註冊 LineBotConfig
 builder.Services.AddSingleton<LineBotConfig>();
+builder.Services.AddSingleton<DbConnConfig>();
 
 // 註冊LineBot
 builder.Services.AddHttpClient("LineBot", (serviceProvider, client) => {
     var config = serviceProvider.GetRequiredService<LineBotConfig>();
     client.BaseAddress = new Uri("https://api.line.me/v2/bot/message/reply");
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {config.ChannelAccessToken}");
+});
+
+// 添加資料庫上下文服務
+builder.Services.AddDbContext<ApplicationDbContext>(options => {
+    var dbConnConfig = new DbConnConfig();
+    options.UseNpgsql(dbConnConfig.DefaultConnection, npgsqlOptions => {
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null
+        );
+    });
 });
 
 var app = builder.Build();
