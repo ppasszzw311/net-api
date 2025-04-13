@@ -51,7 +51,7 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) => {
 // 添加資料庫上下文服務
 builder.Services.AddDbContext<ApplicationDbContext>(options => {
     var dbConnConfig = new DbConnConfig();
-    options.UseNpgsql(dbConnConfig.DefaultConnection, npgsqlOptions => {
+    options.UseNpgsql(dbConnConfig.GetConnectionString(), npgsqlOptions => {
         npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(5),
