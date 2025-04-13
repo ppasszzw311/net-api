@@ -2,50 +2,50 @@ namespace NET_API.Models.CWB;
 
 public class WeatherDataCWBModel
 {
-  string Success {get; set;}
-  WeatherResult Result { get; set;}
-  LocationRecord records { get; set;}
+  public string Success {get; set;}
+  public WeatherResult Result { get; set;}
+  public LocationRecord records { get; set;}
 }
 
 public class WeatherResult
 {
-  string Resource_id { get; set;}
-  List<WeatherDataField> Fields {get; set;}
+  public string Resource_id { get; set;}
+  public List<WeatherDataField> Fields {get; set;}
 }
 
 public class WeatherDataField
 {
-  string Id {get; set;}
-  string Type {get; set;} 
+  public string Id {get; set;}
+  public string Type {get; set;} 
 }
 
 public class WeatherRecord
 {
-  string DatasetDescription {get; set;}
-  List<LocationRecord> Location {get; set;}
+  public string DatasetDescription {get; set;}
+  public List<LocationRecord> Location {get; set;}
 }
 
 public class LocationRecord
 {
-  string LocationName {get; set;}
-  List<WeatherElement> WeatherElement {get;set;}
+  public string LocationName {get; set;}
+  public List<WeatherElement> WeatherElement {get;set;}
 }
 
 public class WeatherElement
 {
-  string ElementName {get; set;}
-  List<RecordElementTime> time {get; set;}
+  public string ElementName {get; set;}
+  public List<RecordElementTime> time {get; set;}
 }
 
 public class RecordElementTime
 {
-  string StartTime {get; set;}
-  string EndTime {get; set;}
-  ParameterItem Parameter {get;set;}
+  public string StartTime {get; set;}
+  public string EndTime {get; set;}
+  public ParameterItem Parameter {get;set;}
 }
 
 public class ParameterItem
 {
-  string ParameterName {get; set;}
-  string ParameterValue {get; set;}
+  public string ParameterName {get; set;}
+  public string ParameterValue {get; set;}
 }
