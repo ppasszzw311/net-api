@@ -9,6 +9,4 @@
             return Task.FromResult("這是天氣查詢的回應");
         }
     }
-    {
-    }
 }
