@@ -5,6 +5,7 @@ using NET_API.Config;
 using System.Threading.Tasks;
 using NET_API.Models.CWB;
 using Newtonsoft.Json;
+using NET_API.Services.LineBot;
 
 namespace NET_API.Controllers;
 
@@ -92,26 +93,31 @@ public class LineBotController : ControllerBase
             // 如果是天氣就呼叫天氣
             var city = ParseCity(reqText);
 
-            // 呼叫中央氣象局api
-            var weatherData = await GetWeatherFromCWB(city);
-
-            if (weatherData.Success == "true")
+            if (city != null)
             {
-                // 回傳圖卡
-                //GetWeatherCard(weatherData);
-                message.type = "flex";
-                message.text = "台北是";
+                // 呼叫中央氣象局api
+                var weatherData = await GetWeatherFromCWB(city);
+
+                if (weatherData.Success == "true")
+                {
+                    // 回傳圖卡
+                    //GetWeatherCard(weatherData);
+                    message.type = "flex";
+                    message.text = "台北是";
+                }
             }
             else
             {
                 message.type = "text";
-                message.text = "成功呼叫api";
+                message.text = "有API";
             }
         }
         else
         {
+            var strategyContext = new MessageStrategyContext();
+            string replyText = await strategyContext.HandleMessageAsync(reqText);
             message.type = "text";
-            message.text = "你好三味線";
+            message.text = replyText;
         }
 
         return message;
