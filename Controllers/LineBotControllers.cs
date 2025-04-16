@@ -28,6 +28,9 @@ public class LineBotController : ControllerBase
         LineBotResponse result = new LineBotResponse();
         List<LineBotResponseMessage> messages = new List<LineBotResponseMessage>();
 
+        // 取得user id
+        Console.WriteLine(req.Events[0]);
+
         if (req.Events.Count > 0)
         {
             foreach(var item in req.Events)
