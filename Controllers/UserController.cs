@@ -42,10 +42,17 @@ namespace NET_API.Controllers
         [HttpPost]
         public async Task<ActionResult<UserModel>> AddUser(UserModel user)
         {
+            // check if user already exists
+            var existingUser = await _context.Users.FindAsync(user.UserId);
+            if (existingUser != null)
+            {
+                return BadRequest("User already exists");
+            }
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof (GetUser), new { id = user.UserId}, user);
+            return CreatedAtAction(nameof(GetUser), new { userId = user.UserId }, user);
         }
 
         [HttpPut("{userId}")]

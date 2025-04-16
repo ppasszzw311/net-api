@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 
 namespace NET_API.Models;
 
 public class UserModel
 {
   // userid
+  [Key]
   public string UserId {get; set;}
   // user_name
   public string UserName {get; set;}
@@ -18,6 +20,7 @@ public class UserModel
 public class RoleModel
 {
   // role id
+  [Key]
   public string RoleId {get; set; }
   // role display name
   public string RoleName {get; set; }
@@ -26,6 +29,7 @@ public class RoleModel
 public class UserHasRole
 {
   // role id
+  [Key]
   public string RoleId {get; set;}
   // user id
   public string UserId {get; set;}
