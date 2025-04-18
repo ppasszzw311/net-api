@@ -6,6 +6,7 @@ using NET_API.Config;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using NET_API.Data;
+using NET_API.Services.LineBot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +48,8 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) => {
     client.BaseAddress = new Uri("https://api.line.me/v2/bot/message/reply");
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {config.ChannelAccessToken}");
 });
+
+builder.Services.AddScoped<LineService>();
 
 // 添加資料庫上下文服務
 builder.Services.AddDbContext<ApplicationDbContext>(options => {

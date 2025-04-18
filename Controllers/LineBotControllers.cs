@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using NET_API.Dtos;
-using System.Text.Json;
 using NET_API.Config;
-using System.Threading.Tasks;
 using NET_API.Models.CWB;
 using Newtonsoft.Json;
 using NET_API.Services.LineBot;
@@ -28,8 +26,8 @@ public class LineBotController : ControllerBase
         LineBotResponse result = new LineBotResponse();
         List<LineBotResponseMessage> messages = new List<LineBotResponseMessage>();
 
-        // 取得user id
-        Console.WriteLine(req.Events[0]);
+        // 取得user i
+        //var userId = 
 
         if (req.Events.Count > 0)
         {

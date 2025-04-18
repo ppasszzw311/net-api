@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NET_API.Models;
+using NET_API.Models.Stock;
 
 namespace NET_API.Data;
 
@@ -23,4 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RoleModel> Roles {get; set;}
     // 使用者有的權限
     public DbSet<UserHasRole> UserHasRoles {get; set;}
+
+    // Stock
+    public DbSet<StockData> StockDatas {get; set;}
 } 
