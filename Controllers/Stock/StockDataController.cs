@@ -43,8 +43,8 @@ namespace NET_API.Controllers.Stock
         }
 
         // 依據日期取得結果 
-        [HttpGet("/date/{startDate}/{endDate}")]
-        public async Task<List<StockData>> GetStockDataByDate(string? startDate, string endDate)
+        [HttpGet("date")]
+        public async Task<List<StockData>> GetStockDataByDate([FromQuery]string? startDate, [FromQuery] string? endDate)
         {
             var taipeiTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Taipei");
             DateTime taipeiTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, taipeiTimeZone);
