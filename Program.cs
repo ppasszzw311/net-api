@@ -10,6 +10,7 @@ using NET_API.Services.LineBot;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,11 @@ if (builder.Environment.IsDevelopment())
 {
     Env.Load();
 }
+
+// 配置數據保護
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys")))
+    .SetApplicationName("NugAPI");
 
 // 配置日誌
 builder.Logging.ClearProviders();
@@ -41,7 +47,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 配置 JWT 認證
+// 配置 JWT 認證（但不強制要求）
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -97,9 +103,13 @@ if (app.Environment.IsDevelopment())
 // 使用 CORS
 app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
+// 配置 HTTPS 重定向
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-// 添加認證和授權中間件
+// 添加認證和授權中間件（但不強制要求）
 app.UseAuthentication();
 app.UseAuthorization();
 
