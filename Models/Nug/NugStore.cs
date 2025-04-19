@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace NET_API.Models.Nug
 {
@@ -12,6 +13,10 @@ namespace NET_API.Models.Nug
     [Column("uuid")]
     public Guid UUID { get; private set; }
 
+    [Column("store_id")]
+    public string StoreId { get; set; }
+
+    
     [Required]
     [Column("owner_id")]
     public string OwnerId { get; set; }  // 注意這裡的類型改為 string，對應 NugUser.Id
@@ -46,5 +51,8 @@ namespace NET_API.Models.Nug
     // 導航屬性 - 關聯到 NugUser
     [ForeignKey("OwnerId")]
     public virtual NugUser Owner { get; set; }
+
+    // 導航屬性 - 關聯到 NugProduct
+    public virtual ICollection<NugProduct> Products { get; set; }
   }
 }

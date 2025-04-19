@@ -43,8 +43,9 @@ public class ApplicationDbContext : DbContext
         // 配置 NugProduct 和 NugStore 之間的關係
         modelBuilder.Entity<NugProduct>()
             .HasOne(p => p.Store)
-            .WithMany()
+            .WithMany(s => s.Products)
             .HasForeignKey(p => p.StoreId)
-            .HasPrincipalKey(s => s.UUID);
+            .HasPrincipalKey(s => s.StoreId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
