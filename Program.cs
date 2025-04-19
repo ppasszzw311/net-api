@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using NET_API.Data;
 using NET_API.Services.LineBot;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,12 +41,29 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// 配置 JWT 認證
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
 // 註冊 LineBotConfig
 builder.Services.AddSingleton<LineBotConfig>();
 builder.Services.AddSingleton<DbConnConfig>();
 
 // 註冊LineBot
-builder.Services.AddHttpClient("LineBot", (serviceProvider, client) => {
+builder.Services.AddHttpClient("LineBot", (serviceProvider, client) =>
+{
     var config = serviceProvider.GetRequiredService<LineBotConfig>();
     client.BaseAddress = new Uri("https://api.line.me/v2/bot/message/reply");
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {config.ChannelAccessToken}");
@@ -52,9 +72,11 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) => {
 builder.Services.AddScoped<LineService>();
 
 // 添加資料庫上下文服務
-builder.Services.AddDbContext<ApplicationDbContext>(options => {
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
     var dbConnConfig = new DbConnConfig();
-    options.UseNpgsql(dbConnConfig.GetConnectionString(), npgsqlOptions => {
+    options.UseNpgsql(dbConnConfig.GetConnectionString(), npgsqlOptions =>
+    {
         npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(5),
@@ -77,6 +99,8 @@ app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 
+// 添加認證和授權中間件
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
