@@ -7,6 +7,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using NET_API.Data;
 using NET_API.Services.LineBot;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +22,6 @@ if (builder.Environment.IsDevelopment())
 
 // 配置數據保護
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys")))
     .SetApplicationName("NugAPI");
 
 // 配置日誌
@@ -98,12 +101,6 @@ if (app.Environment.IsDevelopment())
 
 // 使用 CORS
 app.UseCors("AllowAll");
-
-// 配置 HTTPS 重定向
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
 
 // 添加認證和授權中間件（但不強制要求）
 app.UseAuthentication();
