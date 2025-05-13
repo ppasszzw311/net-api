@@ -3,4 +3,7 @@ appsettings.Development.json
 /obj
 .env
 
+dev.db
+dev.db-shm
+dev.db-wal
 /.vs/net-api

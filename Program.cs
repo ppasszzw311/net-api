@@ -14,6 +14,9 @@ using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 取得環境
+var environment = builder.Environment;
+
 // 在開發環境加載 .env 文件
 if (builder.Environment.IsDevelopment())
 {
@@ -80,14 +83,24 @@ builder.Services.AddScoped<LineService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var dbConnConfig = new DbConnConfig();
-    options.UseNpgsql(dbConnConfig.GetConnectionString(), npgsqlOptions =>
+    builder.Configuration.GetSection("Database").Bind(dbConnConfig);
+
+    // 判定環境取得不同資料庫
+    if (environment.IsDevelopment())
     {
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
-            errorCodesToAdd: null
-        );
-    });
+        options.UseSqlite(dbConnConfig.GetConnectionString());
+    }
+    else
+    {
+        options.UseNpgsql(dbConnConfig.GetConnectionString(), npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorCodesToAdd: null
+            );
+        });
+    }
 });
 
 var app = builder.Build();
