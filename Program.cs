@@ -34,13 +34,15 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 // 配置 CORS
+var allowOrigin = "https://mak-web.zeabur.app";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowMakWeb", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowOrigin)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -122,7 +124,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/charhub"); // 註冊路由
+app.MapHub<ChatHub>("/chathub"); // 註冊路由
 
 app.Run();
 
