@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 using NET_API.Services.SignalR;
+using NET_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,15 +35,23 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 // 配置 CORS
-var allowOrigin = "https://mak-web.zeabur.app";
+var allowOrigins = new[] {
+    "https://mak-web.zeabur.app",
+    "http://localhost:5173"  // 添加本地开发环境的前端地址
+};
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMakWeb", policy =>
     {
-        policy.WithOrigins(allowOrigin)
+        policy.WithOrigins(allowOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials()
+              .SetIsOriginAllowed(origin =>
+              {
+                  Console.WriteLine($"Checking origin: {origin}");
+                  return allowOrigins.Contains(origin);
+              });
     });
 });
 
@@ -82,6 +91,7 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) =>
 });
 
 builder.Services.AddScoped<LineService>();
+builder.Services.AddScoped<NotificationService>();
 
 // 添加資料庫上下文服務
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -117,7 +127,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // 使用 CORS
-app.UseCors("AllowAll");
+app.UseCors("AllowMakWeb");
 
 // 添加認證和授權中間件（但不強制要求）
 app.UseAuthentication();
