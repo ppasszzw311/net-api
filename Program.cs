@@ -92,6 +92,10 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) =>
 
 builder.Services.AddScoped<LineService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ExcelService>();
+builder.Services.AddScoped<ChartService>();
+builder.Services.AddScoped<WordExportService>();
+builder.Services.AddScoped<PdfExportService>();
 
 // 添加資料庫上下文服務
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
