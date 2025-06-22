@@ -64,7 +64,8 @@ namespace NET_API.Services
       );
       title.GetFirstChild<Run>().RunProperties = new RunProperties(
         new FontSize() { Val = "36" },
-        new Bold()
+        new Bold(),
+        new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
       );
       body.AppendChild(title);
       body.AppendChild(new Paragraph()); // 空行
@@ -84,7 +85,8 @@ namespace NET_API.Services
         new Justification() { Val = JustificationValues.Left }
       );
       description.GetFirstChild<Run>().RunProperties = new RunProperties(
-        new FontSize() { Val = "12" }
+        new FontSize() { Val = "12" },
+        new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
       );
       body.AppendChild(description);
       body.AppendChild(new Paragraph()); // 空行
@@ -120,6 +122,10 @@ namespace NET_API.Services
         cell.TableCellProperties = new TableCellProperties(
           new TableCellWidth() { Width = "2000", Type = TableWidthUnitValues.Pct }
         );
+        cell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new Bold(),
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
         headerRow.AppendChild(cell);
       }
       table.AppendChild(headerRow);
@@ -129,11 +135,35 @@ namespace NET_API.Services
       {
         var row = new TableRow();
 
-        row.AppendChild(new TableCell(new Paragraph(new Run(new Text(powerData.Time.ToString("yyyy-MM-dd HH:mm:ss"))))));
-        row.AppendChild(new TableCell(new Paragraph(new Run(new Text((powerData.EastConsumption?.ToString("F2") ?? "0.00"))))));
-        row.AppendChild(new TableCell(new Paragraph(new Run(new Text((powerData.CentralConsumption?.ToString("F2") ?? "0.00"))))));
-        row.AppendChild(new TableCell(new Paragraph(new Run(new Text((powerData.NorthConsumption?.ToString("F2") ?? "0.00"))))));
-        row.AppendChild(new TableCell(new Paragraph(new Run(new Text((powerData.SouthConsumption?.ToString("F2") ?? "0.00"))))));
+        var timeCell = new TableCell(new Paragraph(new Run(new Text(powerData.Time.ToString("yyyy-MM-dd HH:mm:ss")))));
+        timeCell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
+        row.AppendChild(timeCell);
+
+        var eastCell = new TableCell(new Paragraph(new Run(new Text((powerData.EastConsumption?.ToString("F2") ?? "0.00")))));
+        eastCell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
+        row.AppendChild(eastCell);
+
+        var centralCell = new TableCell(new Paragraph(new Run(new Text((powerData.CentralConsumption?.ToString("F2") ?? "0.00")))));
+        centralCell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
+        row.AppendChild(centralCell);
+
+        var northCell = new TableCell(new Paragraph(new Run(new Text((powerData.NorthConsumption?.ToString("F2") ?? "0.00")))));
+        northCell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
+        row.AppendChild(northCell);
+
+        var southCell = new TableCell(new Paragraph(new Run(new Text((powerData.SouthConsumption?.ToString("F2") ?? "0.00")))));
+        southCell.GetFirstChild<Paragraph>().GetFirstChild<Run>().RunProperties = new RunProperties(
+          new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
+        );
+        row.AppendChild(southCell);
 
         table.AppendChild(row);
       }
@@ -154,6 +184,9 @@ namespace NET_API.Services
       );
       stats.ParagraphProperties = new ParagraphProperties(
         new Justification() { Val = JustificationValues.Right }
+      );
+      stats.GetFirstChild<Run>().RunProperties = new RunProperties(
+        new RunFonts() { Ascii = "Microsoft JhengHei", EastAsia = "Microsoft JhengHei", HighAnsi = "Microsoft JhengHei" }
       );
       body.AppendChild(stats);
     }

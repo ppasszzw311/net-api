@@ -8,16 +8,49 @@ using iText.Kernel.Font;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Layout.Borders;
+using Microsoft.Extensions.Hosting;
 
 namespace NET_API.Services
 {
   public class PdfExportService
   {
     private readonly ChartService _chartService;
+    private readonly IHostEnvironment _environment;
+    private PdfFont? _chineseFont;
 
-    public PdfExportService(ChartService chartService)
+    public PdfExportService(ChartService chartService, IHostEnvironment environment)
     {
       _chartService = chartService;
+      _environment = environment;
+    }
+
+    /// <summary>
+    /// 取得中文字體
+    /// </summary>
+    /// <returns>PDF 字體物件</returns>
+    private PdfFont GetChineseFont()
+    {
+      if (_chineseFont != null)
+        return _chineseFont;
+
+      try
+      {
+        var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttc");
+        if (File.Exists(fontPath))
+        {
+          _chineseFont = PdfFontFactory.CreateFont(fontPath, "Identity-H");
+          Console.WriteLine($"成功載入 PDF 中文字體: {fontPath}");
+          return _chineseFont;
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"載入 PDF 中文字體失敗: {ex.Message}");
+      }
+
+      // 如果無法載入中文字體，使用預設字體
+      _chineseFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+      return _chineseFont;
     }
 
     /// <summary>
@@ -34,19 +67,19 @@ namespace NET_API.Services
         var pdf = new PdfDocument(writer);
         var document = new Document(pdf);
 
-        // 使用標準字體，避免中文字體問題
-        PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+        // 使用中文字體
+        PdfFont font = GetChineseFont();
 
-        // 添加標題 - 使用英文避免字體問題
-        AddTitle(document, "TaiPower Power Consumption Report", font);
+        // 添加標題 - 使用繁體中文
+        AddTitle(document, "台電用電量資料報告", font);
 
         // 添加折線圖
         AddChartImage(document, data);
 
-        // 添加資料表格 - 使用英文標題
+        // 添加資料表格 - 使用繁體中文標題
         AddDataTable(document, data, font);
 
-        // 添加統計資訊 - 使用英文
+        // 添加統計資訊 - 使用繁體中文
         AddStatistics(document, data, font);
 
         document.Close();
@@ -95,8 +128,8 @@ namespace NET_API.Services
       var table = new Table(5);
       table.SetWidth(UnitValue.CreatePercentValue(100));
 
-      // 表格標題 - 使用英文
-      var headers = new[] { "Time", "East (MW)", "Central (MW)", "North (MW)", "South (MW)" };
+      // 表格標題 - 使用繁體中文
+      var headers = new[] { "時間", "東部 (MW)", "中部 (MW)", "北部 (MW)", "南部 (MW)" };
 
       foreach (var header in headers)
       {
@@ -145,7 +178,7 @@ namespace NET_API.Services
     /// </summary>
     private void AddStatistics(Document document, PowerDataResponse data, PdfFont font)
     {
-      var stats = new Paragraph($"Total Records: {data.Count}, Export Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")
+      var stats = new Paragraph($"總計 {data.Count} 筆資料，匯出時間：{DateTime.Now:yyyy-MM-dd HH:mm:ss}")
         .SetFont(font)
         .SetFontSize(10)
         .SetTextAlignment(TextAlignment.RIGHT)

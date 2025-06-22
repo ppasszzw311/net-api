@@ -6,6 +6,13 @@ namespace NET_API.Services
 {
   public class ChartService
   {
+    private readonly FontService _fontService;
+
+    public ChartService(FontService fontService)
+    {
+      _fontService = fontService;
+    }
+
     /// <summary>
     /// 生成台電用電量折線圖
     /// </summary>
@@ -37,6 +44,9 @@ namespace NET_API.Services
         var maxValue = allValues.Max();
         var valueRange = maxValue - minValue;
 
+        // 取得中文字體
+        var chineseFont = _fontService.GetChineseFont();
+
         // 繪製座標軸
         var axisPaint = new SKPaint
         {
@@ -47,22 +57,24 @@ namespace NET_API.Services
         canvas.DrawLine(margin, height - margin, width - margin, height - margin, axisPaint); // X軸
         canvas.DrawLine(margin, margin, margin, height - margin, axisPaint); // Y軸
 
-        // 繪製標題
+        // 繪製標題 - 使用繁體中文
         var titlePaint = new SKPaint
         {
           Color = SKColors.Black,
           TextSize = 16,
           IsAntialias = true,
-          FakeBoldText = true
+          FakeBoldText = true,
+          Typeface = chineseFont
         };
-        canvas.DrawText("TaiPower Regional Power Consumption Trend", width / 2 - 200, 30, titlePaint);
+        canvas.DrawText("台電各地區用電量趨勢圖", width / 2 - 120, 30, titlePaint);
 
         // 繪製Y軸標籤
         var labelPaint = new SKPaint
         {
           Color = SKColors.Black,
           TextSize = 8,
-          IsAntialias = true
+          IsAntialias = true,
+          Typeface = chineseFont
         };
         for (int i = 0; i <= 5; i++)
         {
@@ -74,7 +86,7 @@ namespace NET_API.Services
         // 繪製折線
         var colors = new[] { SKColors.Red, SKColors.Blue, SKColors.Green, SKColors.Orange };
         var regions = new[] { eastValues, centralValues, northValues, southValues };
-        var regionNames = new[] { "East", "Central", "North", "South" };
+        var regionNames = new[] { "東部", "中部", "北部", "南部" };
 
         for (int r = 0; r < regions.Length; r++)
         {
@@ -103,7 +115,7 @@ namespace NET_API.Services
           }
         }
 
-        // 繪製圖例
+        // 繪製圖例 - 使用繁體中文
         var legendY = height - 30;
         for (int i = 0; i < regionNames.Length; i++)
         {

@@ -92,6 +92,7 @@ builder.Services.AddHttpClient("LineBot", (serviceProvider, client) =>
 
 builder.Services.AddScoped<LineService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<FontService>();
 builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<ChartService>();
 builder.Services.AddScoped<WordExportService>();
