@@ -19,7 +19,11 @@ namespace NET_API.Controllers.TaiPower
         // 修正時間方法：將資料庫中多出8小時的時間減去8小時
         private DateTime CorrectTime(DateTime dbTime)
         {
-            return dbTime.AddHours(-8);
+            // 確保時間是 UTC 時間，然後減去8小時
+            var utcTime = dbTime.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(dbTime, DateTimeKind.Utc) 
+                : dbTime;
+            return utcTime.AddHours(-8);
         }
 
         // 取得全部
@@ -79,9 +83,9 @@ namespace NET_API.Controllers.TaiPower
                 return BadRequest("日期格式錯誤，請使用 yyyy-MM-dd 格式");
             }
 
-            // 將輸入的日期加上8小時來匹配資料庫中的時間
-            var dbStartDate = startDate.Date.AddHours(8);
-            var dbEndDate = endDate.Date.AddDays(1).AddHours(8);
+            // 將輸入的日期加上8小時來匹配資料庫中的時間，並確保是 UTC 時間
+            var dbStartDate = DateTime.SpecifyKind(startDate.Date.AddHours(8), DateTimeKind.Utc);
+            var dbEndDate = DateTime.SpecifyKind(endDate.Date.AddDays(1).AddHours(8), DateTimeKind.Utc);
 
             var data = await _context.TaiPowers.Where(d => d.Time >= dbStartDate && d.Time < dbEndDate).ToListAsync();
             var response = new PowerDataResponse();
