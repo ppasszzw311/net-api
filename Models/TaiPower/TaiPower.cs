@@ -9,24 +9,24 @@ namespace NET_API.Models.TaiPower
     {
         [Key]
         [Column("time")]
-        public DateTime Time {get; set;} 
+        public DateTime Time { get; set; }
         [Column("east_generation")]
-        public decimal EastGeneration {get; set;}
+        public decimal EastGeneration { get; set; }
         [Column("central_generation")]
-        public decimal CentralGeneration {get; set;}
+        public decimal CentralGeneration { get; set; }
         [Column("north_generation")]
-        public decimal NorthGeneration {get; set;}
+        public decimal NorthGeneration { get; set; }
         [Column("south_generation")]
-        public decimal SouthGeneration {get; set;}
+        public decimal SouthGeneration { get; set; }
         [Column("north_consumption")]
-        public decimal NorthConsumption {get; set;}
+        public decimal NorthConsumption { get; set; }
         [Column("south_consumption")]
-        public decimal SouthConsumption {get; set;}
+        public decimal SouthConsumption { get; set; }
         [Column("central_consumption")]
-        public decimal CentralConsumption {get; set;}
+        public decimal CentralConsumption { get; set; }
         [Column("east_consumption")]
-        public decimal EastConsumption {get; set;}
-        [Column("create_at")]
-        public DateTime CreateAt {get; set;}
+        public decimal EastConsumption { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
     }
 }
