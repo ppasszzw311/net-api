@@ -16,18 +16,10 @@ namespace NET_API.Controllers.TaiPower
             _context = context;
         }
 
-        // 時區轉換輔助方法：將 UTC 時間轉換為台灣時間
-        private DateTime ConvertToTaiwanTime(DateTime utcTime)
+        // 修正時間方法：將資料庫中多出8小時的時間減去8小時
+        private DateTime CorrectTime(DateTime dbTime)
         {
-            // 如果時間已經是本地時間，先轉換為 UTC
-            if (utcTime.Kind == DateTimeKind.Unspecified)
-            {
-                utcTime = DateTime.SpecifyKind(utcTime, DateTimeKind.Utc);
-            }
-
-            // 轉換為台灣時間 (UTC+8)
-            var taiwanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Taipei");
-            return TimeZoneInfo.ConvertTimeFromUtc(utcTime, taiwanTimeZone);
+            return dbTime.AddHours(-8);
         }
 
         // 取得全部
@@ -38,7 +30,7 @@ namespace NET_API.Controllers.TaiPower
             var response = new PowerDataResponse();
             response.Data = data.Select(d => new PowerData
             {
-                Time = ConvertToTaiwanTime(d.Time),
+                Time = CorrectTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
                 CentralConsumption = d.CentralConsumption ?? 0,
                 NorthConsumption = d.NorthConsumption ?? 0,
@@ -67,7 +59,7 @@ namespace NET_API.Controllers.TaiPower
 
             return new PowerData
             {
-                Time = ConvertToTaiwanTime(data.Time),
+                Time = CorrectTime(data.Time),
                 EastConsumption = data.EastConsumption ?? 0,
                 CentralConsumption = data.CentralConsumption ?? 0,
                 NorthConsumption = data.NorthConsumption ?? 0,
@@ -87,16 +79,15 @@ namespace NET_API.Controllers.TaiPower
                 return BadRequest("日期格式錯誤，請使用 yyyy-MM-dd 格式");
             }
 
-            // 將輸入的日期轉換為 UTC 時間進行查詢
-            var taiwanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Taipei");
-            var utcStartDate = TimeZoneInfo.ConvertTimeToUtc(startDate.Date, taiwanTimeZone);
-            var utcEndDate = TimeZoneInfo.ConvertTimeToUtc(endDate.Date.AddDays(1), taiwanTimeZone);
+            // 將輸入的日期加上8小時來匹配資料庫中的時間
+            var dbStartDate = startDate.Date.AddHours(8);
+            var dbEndDate = endDate.Date.AddDays(1).AddHours(8);
 
-            var data = await _context.TaiPowers.Where(d => d.Time >= utcStartDate && d.Time < utcEndDate).ToListAsync();
+            var data = await _context.TaiPowers.Where(d => d.Time >= dbStartDate && d.Time < dbEndDate).ToListAsync();
             var response = new PowerDataResponse();
             response.Data = data.Select(d => new PowerData
             {
-                Time = ConvertToTaiwanTime(d.Time),
+                Time = CorrectTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
                 CentralConsumption = d.CentralConsumption ?? 0,
                 NorthConsumption = d.NorthConsumption ?? 0,
@@ -124,7 +115,7 @@ namespace NET_API.Controllers.TaiPower
                     var eastData = await _context.TaiPowers.Where(d => d.EastConsumption.HasValue && d.EastConsumption > 0).ToListAsync();
                     response.Data = eastData.Select(d => new PowerData
                     {
-                        Time = ConvertToTaiwanTime(d.Time),
+                        Time = CorrectTime(d.Time),
                         EastConsumption = d.EastConsumption ?? 0,
                     }).ToList();
                     response.Count = eastData.Count;
@@ -133,7 +124,7 @@ namespace NET_API.Controllers.TaiPower
                     var centralData = await _context.TaiPowers.Where(d => d.CentralConsumption.HasValue && d.CentralConsumption > 0).ToListAsync();
                     response.Data = centralData.Select(d => new PowerData
                     {
-                        Time = ConvertToTaiwanTime(d.Time),
+                        Time = CorrectTime(d.Time),
                         CentralConsumption = d.CentralConsumption ?? 0,
                     }).ToList();
                     response.Count = centralData.Count;
@@ -142,7 +133,7 @@ namespace NET_API.Controllers.TaiPower
                     var northData = await _context.TaiPowers.Where(d => d.NorthConsumption.HasValue && d.NorthConsumption > 0).ToListAsync();
                     response.Data = northData.Select(d => new PowerData
                     {
-                        Time = ConvertToTaiwanTime(d.Time),
+                        Time = CorrectTime(d.Time),
                         NorthConsumption = d.NorthConsumption ?? 0,
                     }).ToList();
                     response.Count = northData.Count;
@@ -151,7 +142,7 @@ namespace NET_API.Controllers.TaiPower
                     var southData = await _context.TaiPowers.Where(d => d.SouthConsumption.HasValue && d.SouthConsumption > 0).ToListAsync();
                     response.Data = southData.Select(d => new PowerData
                     {
-                        Time = ConvertToTaiwanTime(d.Time),
+                        Time = CorrectTime(d.Time),
                         SouthConsumption = d.SouthConsumption ?? 0,
                     }).ToList();
                     response.Count = southData.Count;
