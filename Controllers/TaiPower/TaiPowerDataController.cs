@@ -372,11 +372,20 @@ namespace NET_API.Controllers.TaiPower
         [HttpGet("export/pdf/all")]
         public async Task<IActionResult> ExportAllTaiPowerDataToPdf()
         {
-            var data = await _context.TaiPowers.ToListAsync();
+            // 計算24小時前的UTC時間（考慮資料庫中的時間是UTC+8）
+            var currentUtcTime = DateTime.UtcNow;
+            var cutoffUtcTime = currentUtcTime.AddHours(-24);
+            
+            // 從資料庫查詢最近24小時的數據
+            var data = await _context.TaiPowers
+                .Where(d => d.Time >= cutoffUtcTime)
+                .OrderBy(d => d.Time)
+                .ToListAsync();
+                
             var response = new PowerDataResponse();
 
             // 轉換數據格式
-            var allPowerData = data.Select(d => new PowerData
+            var powerData = data.Select(d => new PowerData
             {
                 Time = CorrectTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
@@ -384,13 +393,9 @@ namespace NET_API.Controllers.TaiPower
                 NorthConsumption = d.NorthConsumption ?? 0,
                 SouthConsumption = d.SouthConsumption ?? 0,
             }).ToList();
-
-            // 限制為最近24小時的數據
-            var cutoffTime = DateTime.Now.AddHours(-24);
-            var recentData = allPowerData.Where(d => d.Time >= cutoffTime).ToList();
             
-            response.Data = recentData;
-            response.Count = recentData.Count;
+            response.Data = powerData;
+            response.Count = powerData.Count;
 
             if (response.Count == 0)
             {
@@ -419,7 +424,12 @@ namespace NET_API.Controllers.TaiPower
             var dbStartDate = DateTime.SpecifyKind(startDate.Date.AddHours(8), DateTimeKind.Utc);
             var dbEndDate = DateTime.SpecifyKind(endDate.Date.AddDays(1).AddHours(8), DateTimeKind.Utc);
 
-            var data = await _context.TaiPowers.Where(d => d.Time >= dbStartDate && d.Time < dbEndDate).ToListAsync();
+            // 從資料庫查詢指定時間範圍的數據
+            var data = await _context.TaiPowers
+                .Where(d => d.Time >= dbStartDate && d.Time < dbEndDate)
+                .OrderBy(d => d.Time)
+                .ToListAsync();
+                
             var response = new PowerDataResponse();
             
             // 轉換數據格式
@@ -433,8 +443,9 @@ namespace NET_API.Controllers.TaiPower
             }).ToList();
 
             // 限制為最近24小時的數據
-            var cutoffTime = DateTime.Now.AddHours(-24);
-            var recentData = allPowerData.Where(d => d.Time >= cutoffTime).ToList();
+            var currentUtcTime = DateTime.UtcNow;
+            var cutoffUtcTime = currentUtcTime.AddHours(-24);
+            var recentData = allPowerData.Where(d => d.Time >= cutoffUtcTime).ToList();
             
             response.Data = recentData;
             response.Count = recentData.Count;
