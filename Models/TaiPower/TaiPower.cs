@@ -11,21 +11,21 @@ namespace NET_API.Models.TaiPower
         [Column("time")]
         public DateTime Time { get; set; }
         [Column("east_generation")]
-        public decimal EastGeneration { get; set; }
+        public double EastGeneration { get; set; }
         [Column("central_generation")]
-        public decimal CentralGeneration { get; set; }
+        public double CentralGeneration { get; set; }
         [Column("north_generation")]
-        public decimal NorthGeneration { get; set; }
+        public double NorthGeneration { get; set; }
         [Column("south_generation")]
-        public decimal SouthGeneration { get; set; }
+        public double SouthGeneration { get; set; }
         [Column("north_consumption")]
-        public decimal NorthConsumption { get; set; }
+        public double NorthConsumption { get; set; }
         [Column("south_consumption")]
-        public decimal SouthConsumption { get; set; }
+        public double SouthConsumption { get; set; }
         [Column("central_consumption")]
-        public decimal CentralConsumption { get; set; }
+        public double CentralConsumption { get; set; }
         [Column("east_consumption")]
-        public decimal EastConsumption { get; set; }
+        public double EastConsumption { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
     }
