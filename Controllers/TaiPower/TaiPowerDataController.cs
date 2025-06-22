@@ -374,7 +374,7 @@ namespace NET_API.Controllers.TaiPower
         {
             // 計算24小時前的UTC時間（考慮資料庫中的時間是UTC+8）
             var currentUtcTime = DateTime.UtcNow;
-            var cutoffUtcTime = currentUtcTime.AddHours(-24);
+            var cutoffUtcTime = currentUtcTime.AddHours(-16);
             
             // 從資料庫查詢最近24小時的數據
             var data = await _context.TaiPowers
