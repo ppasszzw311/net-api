@@ -222,6 +222,7 @@ builder.Services.AddScoped<TaiPowerChartService>();
 3. **更好的錯誤處理**：提供詳細的錯誤資訊和日誌記錄
 4. **替代統計表格**：當圖表無法生成時，顯示統計數據表格
 5. **改善的圖表樣式**：更大的圖表尺寸和更好的說明文字
+6. **智能數據限制**：PDF圖表和表格自動限制為最多一天（24小時）的數據
 
 ### 🔄 PDF 圖表生成流程
 
@@ -244,6 +245,7 @@ builder.Services.AddScoped<TaiPowerChartService>();
 - **更穩定**：減少瀏覽器相關的錯誤
 - **智能備援**：多層備用方案確保PDF總能成功生成
 - **詳細說明**：包含圖表說明和統計資訊
+- **數據優化**：自動限制為最新24小時數據，確保PDF檔案大小適中和生成速度
 
 ### 🎯 使用範例
 
@@ -257,4 +259,8 @@ GET /api/taipowerdatacontroller/export/pdf/range/2024-01-01/2024-01-07
 
 ---
 
-**注意**: 確保 Draw API 服務 (`https://mak-draw-api.zeabur.app`) 可正常訪問。可使用健康檢查端點監控服務狀態。PDF 功能已包含完整的錯誤處理和備用方案，即使 Draw API 暫時無法使用，PDF 仍可正常生成。 
+**注意**: 
+- 確保 Draw API 服務 (`https://mak-draw-api.zeabur.app`) 可正常訪問
+- PDF 功能已包含完整的錯誤處理和備用方案，即使 Draw API 暫時無法使用，PDF 仍可正常生成
+- **數據限制**：PDF 中的圖表和表格自動限制為最多一天（24小時）的數據。如果原始數據超過一天，系統會自動選取最新的24個數據點，並在PDF中顯示相應的時間範圍說明
+- 對於大量數據的圖表需求，建議使用獨立的圖表端點 (`/chart/all` 或 `/chart/range/{start}/{end}`) 來生成完整的圖表 

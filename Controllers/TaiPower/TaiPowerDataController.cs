@@ -37,7 +37,7 @@ namespace NET_API.Controllers.TaiPower
             var utcTime = dbTime.Kind == DateTimeKind.Unspecified
                 ? DateTime.SpecifyKind(dbTime, DateTimeKind.Utc)
                 : dbTime;
-            return utcTime.AddHours(-8);
+            return utcTime.AddHours(8);
         }
 
         // 取得全部
