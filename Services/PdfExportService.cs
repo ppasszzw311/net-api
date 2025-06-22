@@ -9,6 +9,7 @@ using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Layout.Borders;
 using Microsoft.Extensions.Hosting;
+using iText.IO.Image;
 
 namespace NET_API.Services
 {
@@ -35,7 +36,7 @@ namespace NET_API.Services
 
       try
       {
-        var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttc");
+        var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf");
         if (File.Exists(fontPath))
         {
           _chineseFont = PdfFontFactory.CreateFont(fontPath, "Identity-H");
@@ -101,22 +102,37 @@ namespace NET_API.Services
     }
 
     /// <summary>
-    /// 添加圖表圖片
+    /// 添加圖表圖片到 PDF
     /// </summary>
+    /// <param name="document">PDF 文件</param>
+    /// <param name="data">台電資料</param>
     private void AddChartImage(Document document, PowerDataResponse data)
     {
-      var chartImageBytes = _chartService.GenerateTaiPowerLineChartAsPng(data);
-      if (chartImageBytes == null) return;
-
-      using (var imageStream = new MemoryStream(chartImageBytes))
+      try
       {
-        var imageData = iText.IO.Image.ImageDataFactory.Create(imageStream.ToArray());
-        var image = new Image(imageData);
-        image.SetWidth(500);
-        image.SetHeight(300);
-        image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
-        image.SetMarginBottom(20);
-        document.Add(image);
+        var chartBytes = _chartService.GenerateTaiPowerLineChartAsPng(data);
+        if (chartBytes != null && chartBytes.Length > 0)
+        {
+          var imageData = ImageDataFactory.Create(chartBytes);
+          var image = new Image(imageData);
+          image.SetWidth(500);
+          image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+          
+          document.Add(new Paragraph("用電量趨勢圖表").SetFont(GetChineseFont()).SetFontSize(14));
+          document.Add(image);
+        }
+        else
+        {
+          // 如果無法生成圖表，添加說明文字
+          document.Add(new Paragraph("圖表生成功能暫時不可用").SetFont(GetChineseFont()).SetFontSize(12));
+          Console.WriteLine("圖表生成失敗，在 PDF 中添加說明文字");
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"添加圖表到 PDF 時發生錯誤: {ex.Message}");
+        // 添加錯誤說明
+        document.Add(new Paragraph("圖表載入失敗").SetFont(GetChineseFont()).SetFontSize(12));
       }
     }
 

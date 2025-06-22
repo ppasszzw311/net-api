@@ -7,10 +7,31 @@ namespace NET_API.Services
   public class ChartService
   {
     private readonly FontService _fontService;
+    private readonly bool _isSkiaSharpAvailable;
 
     public ChartService(FontService fontService)
     {
       _fontService = fontService;
+      _isSkiaSharpAvailable = CheckSkiaSharpAvailability();
+    }
+
+    /// <summary>
+    /// 檢查 SkiaSharp 是否可用
+    /// </summary>
+    /// <returns>是否可用</returns>
+    private bool CheckSkiaSharpAvailability()
+    {
+      try
+      {
+        // 嘗試建立一個小的測試 bitmap
+        using var testBitmap = new SKBitmap(1, 1);
+        return true;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"SkiaSharp 不可用: {ex.Message}");
+        return false;
+      }
     }
 
     /// <summary>
@@ -20,6 +41,12 @@ namespace NET_API.Services
     /// <returns>圖表圖片</returns>
     public SKBitmap GenerateTaiPowerLineChart(PowerDataResponse data)
     {
+      if (!_isSkiaSharpAvailable)
+      {
+        Console.WriteLine("SkiaSharp 不可用，無法生成圖表");
+        return null;
+      }
+
       if (data.Data.Count == 0) return null;
 
       const int width = 800;
@@ -134,18 +161,24 @@ namespace NET_API.Services
     }
 
     /// <summary>
-    /// 將圖表轉換為 PNG 格式的 byte 陣列
+    /// 生成台電用電量折線圖並轉換為 PNG 格式
     /// </summary>
     /// <param name="data">台電資料</param>
-    /// <returns>PNG 格式的 byte 陣列</returns>
+    /// <returns>PNG 圖片的 byte 陣列</returns>
     public byte[] GenerateTaiPowerLineChartAsPng(PowerDataResponse data)
     {
-      var chartImage = GenerateTaiPowerLineChart(data);
-      if (chartImage == null) return null;
+      if (!_isSkiaSharpAvailable)
+      {
+        Console.WriteLine("SkiaSharp 不可用，回傳空的圖片資料");
+        return Array.Empty<byte>();
+      }
+
+      var bitmap = GenerateTaiPowerLineChart(data);
+      if (bitmap == null) return Array.Empty<byte>();
 
       using (var stream = new MemoryStream())
       {
-        var image = SKImage.FromBitmap(chartImage);
+        var image = SKImage.FromBitmap(bitmap);
         var encodedData = image.Encode(SKEncodedImageFormat.Png, 100);
         return encodedData.ToArray();
       }

@@ -44,8 +44,7 @@ namespace NET_API.Services
             var fontPaths = new[]
             {
                 // 專案內的字體檔案
-                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttc"),
-                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.otf"),
+                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf"),
                 
                 // 系統字體路徑 (macOS)
                 "/System/Library/Fonts/PingFang.ttc",
@@ -53,7 +52,7 @@ namespace NET_API.Services
                 "/System/Library/Fonts/STHeiti Medium.ttc",
                 
                 // 系統字體路徑 (Linux)
-                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttf",
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
                 
                 // 通用字體路徑
@@ -114,7 +113,7 @@ namespace NET_API.Services
         /// <returns>字體檔案路徑</returns>
         public string GetFontPath()
         {
-            var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttc");
+            var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf");
             return File.Exists(fontPath) ? fontPath : string.Empty;
         }
     }
