@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NET_API.Models;
 using NET_API.Models.Nug;
 using NET_API.Models.Stock;
+using NET_API.Models.TaiPower;
 
 namespace NET_API.Data;
 
@@ -29,6 +30,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<NugUser> NugUsers { get; set; }
     public DbSet<NugStore> NugStores { get; set; }
     public DbSet<NugProduct> NugProducts { get; set; }
+
+    // TaiPower
+    public DbSet<TaiPower> TaiPowers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
