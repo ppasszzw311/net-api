@@ -386,7 +386,7 @@ namespace NET_API.Controllers.TaiPower
                 return NotFound("沒有找到任何台電資料");
             }
 
-            var pdfBytes = _pdfExportService.ExportTaiPowerDataToPdf(response, "TaiPowerData_All");
+            var pdfBytes = await _pdfExportService.ExportTaiPowerDataToPdfAsync(response, "TaiPowerData_All");
             var fileName = $"TaiPowerData_All_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
             return File(pdfBytes, "application/pdf", fileName);
@@ -425,7 +425,7 @@ namespace NET_API.Controllers.TaiPower
                 return NotFound($"在 {start} 到 {end} 期間沒有找到任何台電資料");
             }
 
-            var pdfBytes = _pdfExportService.ExportTaiPowerDataToPdf(response, $"TaiPowerData_{start}_{end}");
+            var pdfBytes = await _pdfExportService.ExportTaiPowerDataToPdfAsync(response, $"TaiPowerData_{start}_{end}");
             var fileName = $"TaiPowerData_{start}_{end}.pdf";
 
             return File(pdfBytes, "application/pdf", fileName);

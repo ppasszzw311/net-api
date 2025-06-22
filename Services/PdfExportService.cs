@@ -10,18 +10,19 @@ using iText.Kernel.Colors;
 using iText.Layout.Borders;
 using Microsoft.Extensions.Hosting;
 using iText.IO.Image;
+using System.Threading.Tasks;
 
 namespace NET_API.Services
 {
   public class PdfExportService
   {
-    private readonly ChartService _chartService;
+    private readonly HtmlChartService _htmlChartService;
     private readonly IHostEnvironment _environment;
     private PdfFont? _chineseFont;
 
-    public PdfExportService(ChartService chartService, IHostEnvironment environment)
+    public PdfExportService(HtmlChartService htmlChartService, IHostEnvironment environment)
     {
-      _chartService = chartService;
+      _htmlChartService = htmlChartService;
       _environment = environment;
     }
 
@@ -34,56 +35,70 @@ namespace NET_API.Services
       if (_chineseFont != null)
         return _chineseFont;
 
-      try
+      var fontPaths = new[]
       {
-        var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf");
-        if (File.Exists(fontPath))
+        Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "SourceHanSans-Regular.ttf"),
+        Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf")
+      };
+
+      foreach (var fontPath in fontPaths)
+      {
+        try
         {
-          _chineseFont = PdfFontFactory.CreateFont(fontPath, "Identity-H");
-          Console.WriteLine($"成功載入 PDF 中文字體: {fontPath}");
-          return _chineseFont;
+          if (File.Exists(fontPath))
+          {
+            _chineseFont = PdfFontFactory.CreateFont(fontPath, "Identity-H");
+            Console.WriteLine($"成功載入 PDF 中文字體: {fontPath}");
+            return _chineseFont;
+          }
         }
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine($"載入 PDF 中文字體失敗: {ex.Message}");
+        catch (Exception ex)
+        {
+          Console.WriteLine($"載入 PDF 中文字體失敗: {ex.Message}");
+        }
       }
 
       // 如果無法載入中文字體，使用預設字體
       _chineseFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+      Console.WriteLine("使用預設字體替代中文字體");
       return _chineseFont;
     }
 
     /// <summary>
-    /// 匯出台電資料為 PDF 文件
+    /// 匯出台電資料為 PDF
     /// </summary>
     /// <param name="data">台電資料</param>
     /// <param name="fileName">檔案名稱</param>
-    /// <returns>PDF 文件的 byte 陣列</returns>
-    public byte[] ExportTaiPowerDataToPdf(PowerDataResponse data, string fileName = "TaiPowerData")
+    /// <returns>PDF 檔案的 byte 陣列</returns>
+    public async Task<byte[]> ExportTaiPowerDataToPdfAsync(PowerDataResponse data, string fileName = "TaiPowerData")
     {
       using (var stream = new MemoryStream())
       {
-        var writer = new PdfWriter(stream);
-        var pdf = new PdfDocument(writer);
-        var document = new Document(pdf);
+        using (var writer = new PdfWriter(stream))
+        using (var pdf = new PdfDocument(writer))
+        using (var document = new Document(pdf))
+        {
+          // 設定文件標題
+          document.Add(new Paragraph("台電用電資料報告")
+            .SetFont(GetChineseFont())
+            .SetFontSize(18)
+            .SetTextAlignment(TextAlignment.CENTER)
+            .SetMarginBottom(20));
 
-        // 使用中文字體
-        PdfFont font = GetChineseFont();
+          // 添加生成時間
+          document.Add(new Paragraph($"報告生成時間: {DateTime.Now:yyyy/MM/dd HH:mm:ss}")
+            .SetFont(GetChineseFont())
+            .SetFontSize(10)
+            .SetTextAlignment(TextAlignment.RIGHT)
+            .SetMarginBottom(20));
 
-        // 添加標題 - 使用繁體中文
-        AddTitle(document, "台電用電量資料報告", font);
+          // 添加圖表
+          await AddChartImageAsync(document, data);
 
-        // 添加折線圖
-        AddChartImage(document, data);
+          // 添加資料表格
+          AddDataTable(document, data, GetChineseFont());
+        }
 
-        // 添加資料表格 - 使用繁體中文標題
-        AddDataTable(document, data, font);
-
-        // 添加統計資訊 - 使用繁體中文
-        AddStatistics(document, data, font);
-
-        document.Close();
         return stream.ToArray();
       }
     }
@@ -106,11 +121,11 @@ namespace NET_API.Services
     /// </summary>
     /// <param name="document">PDF 文件</param>
     /// <param name="data">台電資料</param>
-    private void AddChartImage(Document document, PowerDataResponse data)
+    private async Task AddChartImageAsync(Document document, PowerDataResponse data)
     {
       try
       {
-        var chartBytes = _chartService.GenerateTaiPowerLineChartAsPng(data);
+        var chartBytes = await _htmlChartService.GenerateTaiPowerLineChartAsPngAsync(data);
         if (chartBytes != null && chartBytes.Length > 0)
         {
           var imageData = ImageDataFactory.Create(chartBytes);

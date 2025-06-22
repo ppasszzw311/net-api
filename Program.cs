@@ -95,6 +95,7 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<FontService>();
 builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<ChartService>();
+builder.Services.AddScoped<HtmlChartService>();
 builder.Services.AddScoped<WordExportService>();
 builder.Services.AddScoped<PdfExportService>();
 

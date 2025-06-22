@@ -44,6 +44,7 @@ namespace NET_API.Services
             var fontPaths = new[]
             {
                 // 專案內的字體檔案
+                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "SourceHanSans-Regular.ttf"),
                 Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf"),
                 
                 // 系統字體路徑 (macOS)
@@ -54,6 +55,7 @@ namespace NET_API.Services
                 // 系統字體路徑 (Linux)
                 "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttf",
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
+                "/usr/share/fonts/truetype/source-han-sans/SourceHanSans-Regular.ttf",
                 
                 // 通用字體路徑
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -113,8 +115,19 @@ namespace NET_API.Services
         /// <returns>字體檔案路徑</returns>
         public string GetFontPath()
         {
-            var fontPath = Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf");
-            return File.Exists(fontPath) ? fontPath : string.Empty;
+            var fontPaths = new[]
+            {
+                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "SourceHanSans-Regular.ttf"),
+                Path.Combine(_environment.ContentRootPath, "wwwroot", "fonts", "NotoSansCJK-Regular.ttf")
+            };
+
+            foreach (var fontPath in fontPaths)
+            {
+                if (File.Exists(fontPath))
+                    return fontPath;
+            }
+
+            return string.Empty;
         }
     }
 } 
