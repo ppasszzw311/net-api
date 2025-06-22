@@ -99,6 +99,13 @@ builder.Services.AddScoped<HtmlChartService>();
 builder.Services.AddScoped<WordExportService>();
 builder.Services.AddScoped<PdfExportService>();
 
+// 註冊 HttpClient 和 TaiPowerChartService
+builder.Services.AddHttpClient<TaiPowerChartService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30); // 設定30秒超時
+});
+builder.Services.AddScoped<TaiPowerChartService>();
+
 // 添加資料庫上下文服務
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

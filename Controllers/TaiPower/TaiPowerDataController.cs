@@ -14,17 +14,20 @@ namespace NET_API.Controllers.TaiPower
         private readonly ExcelService _excelService;
         private readonly WordExportService _wordExportService;
         private readonly PdfExportService _pdfExportService;
+        private readonly TaiPowerChartService _chartService;
 
         public TaiPowerDataController(
             ApplicationDbContext context,
             ExcelService excelService,
             WordExportService wordExportService,
-            PdfExportService pdfExportService)
+            PdfExportService pdfExportService,
+            TaiPowerChartService chartService)
         {
             _context = context;
             _excelService = excelService;
             _wordExportService = wordExportService;
             _pdfExportService = pdfExportService;
+            _chartService = chartService;
         }
 
         // 修正時間方法：將資料庫中多出8小時的時間減去8小時
@@ -502,6 +505,247 @@ namespace NET_API.Controllers.TaiPower
             catch (Exception ex)
             {
                 return StatusCode(500, $"清除資料時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 生成全部資料的圖表 (PNG格式)
+        [HttpGet("chart/all")]
+        public async Task<IActionResult> GenerateAllDataChart()
+        {
+            try
+            {
+                var data = await _context.TaiPowers.OrderBy(d => d.Time).ToListAsync();
+                
+                if (data.Count == 0)
+                {
+                    return NotFound("沒有找到任何台電資料");
+                }
+
+                var powerData = data.Select(d => new PowerData
+                {
+                    Time = CorrectTime(d.Time),
+                    EastConsumption = d.EastConsumption ?? 0,
+                    CentralConsumption = d.CentralConsumption ?? 0,
+                    NorthConsumption = d.NorthConsumption ?? 0,
+                    SouthConsumption = d.SouthConsumption ?? 0,
+                }).ToList();
+
+                var chartBytes = await _chartService.GenerateChartPngAsync(powerData);
+                var fileName = $"TaiPowerChart_All_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+
+                return File(chartBytes, "image/png", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"生成圖表時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 生成特定時間區段的圖表 (PNG格式)
+        [HttpGet("chart/range/{start}/{end}")]
+        public async Task<IActionResult> GenerateRangeDataChart(string start, string end)
+        {
+            try
+            {
+                var startDate = DateTime.TryParse(start, out var startDateResult) ? startDateResult : DateTime.MinValue;
+                var endDate = DateTime.TryParse(end, out var endDateResult) ? endDateResult : DateTime.MaxValue;
+
+                if (startDate == DateTime.MinValue || endDate == DateTime.MaxValue)
+                {
+                    return BadRequest("日期格式錯誤，請使用 yyyy-MM-dd 格式");
+                }
+
+                // 將輸入的日期加上8小時來匹配資料庫中的時間，並確保是 UTC 時間
+                var dbStartDate = DateTime.SpecifyKind(startDate.Date.AddHours(8), DateTimeKind.Utc);
+                var dbEndDate = DateTime.SpecifyKind(endDate.Date.AddDays(1).AddHours(8), DateTimeKind.Utc);
+
+                var data = await _context.TaiPowers
+                    .Where(d => d.Time >= dbStartDate && d.Time < dbEndDate)
+                    .OrderBy(d => d.Time)
+                    .ToListAsync();
+
+                if (data.Count == 0)
+                {
+                    return NotFound($"在 {start} 到 {end} 期間沒有找到任何台電資料");
+                }
+
+                var powerData = data.Select(d => new PowerData
+                {
+                    Time = CorrectTime(d.Time),
+                    EastConsumption = d.EastConsumption ?? 0,
+                    CentralConsumption = d.CentralConsumption ?? 0,
+                    NorthConsumption = d.NorthConsumption ?? 0,
+                    SouthConsumption = d.SouthConsumption ?? 0,
+                }).ToList();
+
+                var chartBytes = await _chartService.GenerateChartPngAsync(powerData);
+                var fileName = $"TaiPowerChart_{start}_{end}.png";
+
+                return File(chartBytes, "image/png", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"生成圖表時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 生成最近N天的圖表 (PNG格式)
+        [HttpGet("chart/recent/{days}")]
+        public async Task<IActionResult> GenerateRecentDataChart(int days = 7)
+        {
+            try
+            {
+                if (days < 1 || days > 365)
+                {
+                    return BadRequest("天數必須在1到365之間");
+                }
+
+                var cutoffDate = DateTime.UtcNow.AddDays(-days);
+                var data = await _context.TaiPowers
+                    .Where(d => d.Time >= cutoffDate)
+                    .OrderBy(d => d.Time)
+                    .ToListAsync();
+
+                if (data.Count == 0)
+                {
+                    return NotFound($"沒有找到最近 {days} 天的台電資料");
+                }
+
+                var powerData = data.Select(d => new PowerData
+                {
+                    Time = CorrectTime(d.Time),
+                    EastConsumption = d.EastConsumption ?? 0,
+                    CentralConsumption = d.CentralConsumption ?? 0,
+                    NorthConsumption = d.NorthConsumption ?? 0,
+                    SouthConsumption = d.SouthConsumption ?? 0,
+                }).ToList();
+
+                var chartBytes = await _chartService.GenerateChartPngAsync(powerData);
+                var fileName = $"TaiPowerChart_Recent{days}Days_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+
+                return File(chartBytes, "image/png", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"生成圖表時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 生成Base64格式的圖表
+        [HttpGet("chart/base64/all")]
+        public async Task<IActionResult> GenerateAllDataChartBase64()
+        {
+            try
+            {
+                var data = await _context.TaiPowers.OrderBy(d => d.Time).ToListAsync();
+                
+                if (data.Count == 0)
+                {
+                    return NotFound("沒有找到任何台電資料");
+                }
+
+                var powerData = data.Select(d => new PowerData
+                {
+                    Time = CorrectTime(d.Time),
+                    EastConsumption = d.EastConsumption ?? 0,
+                    CentralConsumption = d.CentralConsumption ?? 0,
+                    NorthConsumption = d.NorthConsumption ?? 0,
+                    SouthConsumption = d.SouthConsumption ?? 0,
+                }).ToList();
+
+                var chartResponse = await _chartService.GenerateChartBase64Async(powerData);
+                
+                return Ok(new
+                {
+                    success = true,
+                    data = chartResponse,
+                    message = "圖表生成成功"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"生成圖表時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 生成Base64格式的特定時間區段圖表
+        [HttpGet("chart/base64/range/{start}/{end}")]
+        public async Task<IActionResult> GenerateRangeDataChartBase64(string start, string end)
+        {
+            try
+            {
+                var startDate = DateTime.TryParse(start, out var startDateResult) ? startDateResult : DateTime.MinValue;
+                var endDate = DateTime.TryParse(end, out var endDateResult) ? endDateResult : DateTime.MaxValue;
+
+                if (startDate == DateTime.MinValue || endDate == DateTime.MaxValue)
+                {
+                    return BadRequest("日期格式錯誤，請使用 yyyy-MM-dd 格式");
+                }
+
+                // 將輸入的日期加上8小時來匹配資料庫中的時間，並確保是 UTC 時間
+                var dbStartDate = DateTime.SpecifyKind(startDate.Date.AddHours(8), DateTimeKind.Utc);
+                var dbEndDate = DateTime.SpecifyKind(endDate.Date.AddDays(1).AddHours(8), DateTimeKind.Utc);
+
+                var data = await _context.TaiPowers
+                    .Where(d => d.Time >= dbStartDate && d.Time < dbEndDate)
+                    .OrderBy(d => d.Time)
+                    .ToListAsync();
+
+                if (data.Count == 0)
+                {
+                    return NotFound($"在 {start} 到 {end} 期間沒有找到任何台電資料");
+                }
+
+                var powerData = data.Select(d => new PowerData
+                {
+                    Time = CorrectTime(d.Time),
+                    EastConsumption = d.EastConsumption ?? 0,
+                    CentralConsumption = d.CentralConsumption ?? 0,
+                    NorthConsumption = d.NorthConsumption ?? 0,
+                    SouthConsumption = d.SouthConsumption ?? 0,
+                }).ToList();
+
+                var chartResponse = await _chartService.GenerateChartBase64Async(powerData);
+                
+                return Ok(new
+                {
+                    success = true,
+                    data = chartResponse,
+                    message = "圖表生成成功",
+                    period = $"{start} - {end}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"生成圖表時發生錯誤: {ex.Message}");
+            }
+        }
+
+        // 檢查圖表服務健康狀態
+        [HttpGet("chart/health")]
+        public async Task<IActionResult> CheckChartServiceHealth()
+        {
+            try
+            {
+                var isHealthy = await _chartService.CheckHealthAsync();
+                
+                return Ok(new
+                {
+                    success = true,
+                    chartServiceHealthy = isHealthy,
+                    message = isHealthy ? "圖表服務運行正常" : "圖表服務無法連接",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    chartServiceHealthy = false,
+                    message = $"檢查圖表服務健康狀態時發生錯誤: {ex.Message}",
+                    timestamp = DateTime.Now
+                });
             }
         }
     }
