@@ -41,6 +41,8 @@ namespace NET_API.Controllers.TaiPower
                 Time = ConvertToTaiwanTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
                 CentralConsumption = d.CentralConsumption ?? 0,
+                NorthConsumption = d.NorthConsumption ?? 0,
+                SouthConsumption = d.SouthConsumption ?? 0,
             }).ToList();
             response.Count = data.Count;
 
@@ -68,6 +70,8 @@ namespace NET_API.Controllers.TaiPower
                 Time = ConvertToTaiwanTime(data.Time),
                 EastConsumption = data.EastConsumption ?? 0,
                 CentralConsumption = data.CentralConsumption ?? 0,
+                NorthConsumption = data.NorthConsumption ?? 0,
+                SouthConsumption = data.SouthConsumption ?? 0,
             };
         }
 
@@ -95,6 +99,8 @@ namespace NET_API.Controllers.TaiPower
                 Time = ConvertToTaiwanTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
                 CentralConsumption = d.CentralConsumption ?? 0,
+                NorthConsumption = d.NorthConsumption ?? 0,
+                SouthConsumption = d.SouthConsumption ?? 0,
             }).ToList();
             response.Count = data.Count;
 
