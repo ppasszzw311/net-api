@@ -103,13 +103,8 @@ namespace NET_API.Services
           // 添加圖表
           await AddChartImageAsync(document, data);
 
-          // 添加資料表格（也使用相同的數據限制）
-          var limitedTableData = new PowerDataResponse
-          {
-            Data = LimitDataToOneDay(data.Data),
-            Count = LimitDataToOneDay(data.Data).Count
-          };
-          AddDataTable(document, limitedTableData, GetChineseFont());
+          // 添加資料表格
+          AddDataTable(document, data, GetChineseFont());
         }
 
         return stream.ToArray();
@@ -138,37 +133,35 @@ namespace NET_API.Services
     {
       try
       {
-        // 限制圖表數據為最多一天（24小時，即24個數據點）
-        var chartData = LimitDataToOneDay(data.Data);
-        var limitedData = new PowerDataResponse 
-        { 
-          Data = chartData, 
-          Count = chartData.Count() 
-        };
-
-        var dataInfo = GetDataRangeInfo(data.Data, chartData);
-
-        // 添加圖表標題和數據範圍說明
+        // 添加圖表標題
         document.Add(new Paragraph("用電量趨勢圖表")
           .SetFont(GetChineseFont())
           .SetFontSize(14)
           .SetTextAlignment(TextAlignment.CENTER)
-          .SetMarginBottom(5));
-
-        document.Add(new Paragraph(dataInfo)
-          .SetFont(GetChineseFont())
-          .SetFontSize(10)
-          .SetTextAlignment(TextAlignment.CENTER)
-          .SetFontColor(ColorConstants.GRAY)
           .SetMarginBottom(10));
+
+        // 添加數據範圍說明
+        if (data.Data.Count > 0)
+        {
+          var startTime = data.Data.Min(d => d.Time);
+          var endTime = data.Data.Max(d => d.Time);
+          var dataInfo = $"數據時間範圍: {startTime:yyyy/MM/dd HH:mm} - {endTime:yyyy/MM/dd HH:mm} (共 {data.Data.Count} 個數據點)";
+          
+          document.Add(new Paragraph(dataInfo)
+            .SetFont(GetChineseFont())
+            .SetFontSize(10)
+            .SetTextAlignment(TextAlignment.CENTER)
+            .SetFontColor(ColorConstants.GRAY)
+            .SetMarginBottom(10));
+        }
 
         byte[]? chartBytes = null;
 
-        // 優先使用 Draw API 服務生成圖表（使用限制後的數據）
+        // 優先使用 Draw API 服務生成圖表
         try
         {
-          _logger.LogInformation("嘗試使用 Draw API 生成PDF圖表，數據點數: {Count}", chartData.Count());
-          chartBytes = await _taipowerChartService.GenerateChartPngAsync(chartData);
+          _logger.LogInformation("嘗試使用 Draw API 生成PDF圖表，數據點數: {Count}", data.Data.Count);
+          chartBytes = await _taipowerChartService.GenerateChartPngAsync(data.Data);
           _logger.LogInformation("Draw API 圖表生成成功，大小: {Size} bytes", chartBytes?.Length ?? 0);
         }
         catch (Exception drawApiEx)
@@ -179,7 +172,7 @@ namespace NET_API.Services
           try
           {
             _logger.LogInformation("使用 HTML Chart Service 作為備用方案");
-            chartBytes = await _htmlChartService.GenerateTaiPowerLineChartAsPngAsync(limitedData);
+            chartBytes = await _htmlChartService.GenerateTaiPowerLineChartAsPngAsync(data);
             _logger.LogInformation("備用圖表生成成功，大小: {Size} bytes", chartBytes?.Length ?? 0);
           }
           catch (Exception htmlEx)
@@ -266,7 +259,7 @@ namespace NET_API.Services
         table.AddHeaderCell(cell);
       }
 
-      // 資料行（已在上層限制為一天的數據，不再需要額外限制）
+      // 資料行
       foreach (var powerData in data.Data)
       {
         table.AddCell(new Cell()
@@ -382,60 +375,6 @@ namespace NET_API.Services
         .SetMarginBottom(10));
 
       document.Add(statsTable);
-    }
-
-    /// <summary>
-    /// 限制數據為最多一天（24小時）
-    /// </summary>
-    /// <param name="data">原始數據</param>
-    /// <returns>限制後的數據</returns>
-    private List<PowerData> LimitDataToOneDay(List<PowerData> data)
-    {
-      const int maxDataPointsPerDay = 24; // 每小時一個數據點，一天最多24個
-
-      if (data.Count <= maxDataPointsPerDay)
-      {
-        return data;
-      }
-
-      // 如果數據超過一天，取最新的24個數據點
-      _logger.LogInformation("數據量超過一天（{Count}個數據點），限制為最新的{MaxPoints}個數據點", 
-        data.Count, maxDataPointsPerDay);
-
-      return data
-        .OrderByDescending(d => d.Time)
-        .Take(maxDataPointsPerDay)
-        .OrderBy(d => d.Time)
-        .ToList();
-    }
-
-    /// <summary>
-    /// 獲取數據範圍資訊
-    /// </summary>
-    /// <param name="originalData">原始數據</param>
-    /// <param name="limitedData">限制後的數據</param>
-    /// <returns>數據範圍說明文字</returns>
-    private string GetDataRangeInfo(List<PowerData> originalData, List<PowerData> limitedData)
-    {
-      if (originalData.Count == limitedData.Count)
-      {
-        if (limitedData.Count == 0)
-        {
-          return "無數據";
-        }
-
-        var startTime = limitedData.Min(d => d.Time);
-        var endTime = limitedData.Max(d => d.Time);
-        
-        return $"數據時間範圍: {startTime:yyyy/MM/dd HH:mm} - {endTime:yyyy/MM/dd HH:mm} (共 {limitedData.Count} 個數據點)";
-      }
-      else
-      {
-        var startTime = limitedData.Min(d => d.Time);
-        var endTime = limitedData.Max(d => d.Time);
-        
-        return $"顯示最新24小時數據: {startTime:yyyy/MM/dd HH:mm} - {endTime:yyyy/MM/dd HH:mm} (原始數據共 {originalData.Count} 個數據點)";
-      }
     }
   }
 }

@@ -30,14 +30,14 @@ namespace NET_API.Controllers.TaiPower
             _chartService = chartService;
         }
 
-        // 修正時間方法：將資料庫中多出8小時的時間減去8小時
+        // 修正時間方法：將資料庫中加8小時
         private DateTime CorrectTime(DateTime dbTime)
         {
             // 確保時間是 UTC 時間，然後減去8小時
             var utcTime = dbTime.Kind == DateTimeKind.Unspecified
                 ? DateTime.SpecifyKind(dbTime, DateTimeKind.Utc)
                 : dbTime;
-            return utcTime.AddHours(8);
+            return utcTime.AddHours(0); // 部署環境為UTC+0，所以不需要加8小時
         }
 
         // 取得全部
@@ -374,7 +374,9 @@ namespace NET_API.Controllers.TaiPower
         {
             var data = await _context.TaiPowers.ToListAsync();
             var response = new PowerDataResponse();
-            response.Data = data.Select(d => new PowerData
+
+            // 轉換數據格式
+            var allPowerData = data.Select(d => new PowerData
             {
                 Time = CorrectTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
@@ -382,7 +384,13 @@ namespace NET_API.Controllers.TaiPower
                 NorthConsumption = d.NorthConsumption ?? 0,
                 SouthConsumption = d.SouthConsumption ?? 0,
             }).ToList();
-            response.Count = data.Count;
+
+            // 限制為最近24小時的數據
+            var cutoffTime = DateTime.Now.AddHours(-24);
+            var recentData = allPowerData.Where(d => d.Time >= cutoffTime).ToList();
+            
+            response.Data = recentData;
+            response.Count = recentData.Count;
 
             if (response.Count == 0)
             {
@@ -413,7 +421,9 @@ namespace NET_API.Controllers.TaiPower
 
             var data = await _context.TaiPowers.Where(d => d.Time >= dbStartDate && d.Time < dbEndDate).ToListAsync();
             var response = new PowerDataResponse();
-            response.Data = data.Select(d => new PowerData
+            
+            // 轉換數據格式
+            var allPowerData = data.Select(d => new PowerData
             {
                 Time = CorrectTime(d.Time),
                 EastConsumption = d.EastConsumption ?? 0,
@@ -421,7 +431,13 @@ namespace NET_API.Controllers.TaiPower
                 NorthConsumption = d.NorthConsumption ?? 0,
                 SouthConsumption = d.SouthConsumption ?? 0,
             }).ToList();
-            response.Count = data.Count;
+
+            // 限制為最近24小時的數據
+            var cutoffTime = DateTime.Now.AddHours(-24);
+            var recentData = allPowerData.Where(d => d.Time >= cutoffTime).ToList();
+            
+            response.Data = recentData;
+            response.Count = recentData.Count;
 
             if (response.Count == 0)
             {
